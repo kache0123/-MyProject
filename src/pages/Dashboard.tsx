@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, TreeSelect } from 'antd';
+import { Row, Col, Tree, Input } from 'antd';
+import type { DataNode } from 'antd/es/tree';
 import {
   UserOutlined,
   ShoppingCartOutlined,
@@ -52,53 +53,75 @@ export default function Dashboard() {
   const treeData = [
     {
       title: '浙江省',
-      value: 'zhejiang',
+      key: 'zhejiang',
       children: [
-        { title: '杭州市', value: 'hangzhou' },
-        { title: '宁波市', value: 'ningbo' },
-        { title: '温州市', value: 'wenzhou' }
+        { title: '杭州市', key: 'hangzhou' },
+        { title: '宁波市', key: 'ningbo' },
+        { title: '温州市', key: 'wenzhou' }
       ]
     },
     {
       title: '江苏省',
-      value: 'jiangsu',
+      key: 'jiangsu',
       children: [
-        { title: '南京市', value: 'nanjing' },
-        { title: '苏州市', value: 'suzhou' },
-        { title: '无锡市', value: 'wuxi' }
+        { title: '南京市', key: 'nanjing' },
+        { title: '苏州市', key: 'suzhou' },
+        { title: '无锡市', key: 'wuxi' }
       ]
     },
     {
       title: '广东省',
-      value: 'guangdong',
+      key: 'guangdong',
       children: [
-        { title: '广州市', value: 'guangzhou' },
-        { title: '深圳市', value: 'shenzhen' },
-        { title: '珠海市', value: 'zhuhai' }
+        { title: '广州市', key: 'guangzhou' },
+        { title: '深圳市', key: 'shenzhen' },
+        { title: '珠海市', key: 'zhuhai' }
       ]
     }
   ];
 
-  const handleProvinceCityChange = (values: string[]) => {
-    console.log('Selected provinces/cities:', values);
+  const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([]);
+  const [searchValue, setSearchValue] = useState('');
+
+  const filterTree = (data: DataNode[], keyword: string): DataNode[] =>
+    data
+      .map((node) => {
+        const children = node.children ? filterTree(node.children as DataNode[], keyword) : [];
+        if (node.title.includes(keyword) || children.length) {
+          return { ...node, children };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+  const filteredTreeData = searchValue
+    ? filterTree(treeData, searchValue)
+    : treeData;
+
+  const handleTreeCheck = (keys: React.Key[]) => {
+    setCheckedKeys(keys);
+    console.log('Selected provinces/cities:', keys);
   };
 
   return (
     <AppLayout>
       <Row gutter={16}>
-        <Col flex="240px">
+        <Col flex="240px" className="sidebar-placeholder">
           <div style={{ width: 240, height: '100%' }}>
-            <TreeSelect
-              style={{ width: '100%' }}
-              multiple
-              showSearch
-              treeCheckable
-              treeCheckStrictly={false}
-              treeData={treeData}
-              placeholder="选择省/市"
-              onChange={(values) =>
-                handleProvinceCityChange(Array.isArray(values) ? values : [])
-              }
+            <Input.Search
+              placeholder="搜索省/市"
+              allowClear
+              onChange={(e) => setSearchValue(e.target.value)}
+              style={{ marginBottom: 8 }}
+            />
+            <Tree
+              style={{ height: '100%' }}
+              checkable
+              showLine
+              defaultExpandAll
+              treeData={filteredTreeData}
+              checkedKeys={checkedKeys}
+              onCheck={(keys) => handleTreeCheck(keys as React.Key[])}
             />
           </div>
         </Col>
