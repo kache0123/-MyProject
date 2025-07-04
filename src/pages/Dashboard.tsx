@@ -11,11 +11,16 @@ import StatCard from '@/components/StatCard';
 import LineChart from '@/components/LineChart';
 import BarChart from '@/components/BarChart';
 import DataTable from '@/components/DataTable';
-import { getOrders, Order } from '@/services/api';
+import { getOrders } from '@/services/api';
+import { Order } from '@/components/DataTable';
 import { formatNumber } from '@/utils';
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
+
+  const handleUpdate = (order: Order) => {
+    setOrders((prev) => prev.map((item) => (item.id === order.id ? order : item)));
+  };
 
   useEffect(() => {
     getOrders().then(setOrders);
@@ -64,7 +69,7 @@ export default function Dashboard() {
       </Row>
 
       <div style={{ marginTop: 16 }}>
-        <DataTable data={orders} />
+        <DataTable data={orders} onUpdate={handleUpdate} />
       </div>
     </AppLayout>
   );
